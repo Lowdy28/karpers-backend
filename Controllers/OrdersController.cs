@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using backend.Data;
 using backend.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace backend.Controllers;
 
@@ -46,6 +47,7 @@ public class OrdersController : ControllerBase
     }
 
     [HttpPatch("{id}/status")]
+    [Authorize(Roles = "Staff,Admin")]
     public async Task<ActionResult<Order>> UpdateStatus(int id, [FromBody] OrderStatus newStatus)
     {
         var order = await _context.Orders.FindAsync(id);
