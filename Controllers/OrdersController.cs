@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using backend.Data;
 using backend.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
+using backend.Hubs;
 
 namespace backend.Controllers;
 
@@ -11,10 +13,12 @@ namespace backend.Controllers;
 public class OrdersController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IHubContext<OrdersHub> _hub;
 
-    public OrdersController(AppDbContext context)
+    public OrdersController(AppDbContext context, IHubContext<OrdersHub> hub)
     {
         _context = context;
+        _hub = hub;
     }
 
     [HttpGet]
@@ -43,6 +47,9 @@ public class OrdersController : ControllerBase
     {
         _context.Orders.Add(order);
         await _context.SaveChangesAsync();
+
+        await _hub.Clients.All.SendAsync("OrderCreated", order.Id);
+
         return CreatedAtAction(nameof(GetById), new { id = order.Id }, order);
     }
 
@@ -55,6 +62,9 @@ public class OrdersController : ControllerBase
 
         order.Status = newStatus;
         await _context.SaveChangesAsync();
+
+        await _hub.Clients.All.SendAsync("OrderStatusChanged", order.Id, newStatus);
+
         return Ok(order);
     }
 }
