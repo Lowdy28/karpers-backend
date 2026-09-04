@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using backend.Data;
@@ -28,5 +29,30 @@ public class CategoriesController : ControllerBase
         _context.Categories.Add(category);
         await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(GetAll), category);
+    }
+
+    [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<Category>> Update(int id, Category updatedCategory)
+    {
+        var category = await _context.Categories.FindAsync(id);
+        if (category == null) return NotFound();
+
+        category.Name = updatedCategory.Name;
+
+        await _context.SaveChangesAsync();
+        return Ok(category);
+    }
+
+    [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult> Delete(int id)
+    {
+        var category = await _context.Categories.FindAsync(id);
+        if (category == null) return NotFound();
+
+        _context.Categories.Remove(category);
+        await _context.SaveChangesAsync();
+        return NoContent();
     }
 }
